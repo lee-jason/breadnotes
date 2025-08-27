@@ -1,0 +1,59 @@
+Features:
+- Bread journaling application
+- User can create entries to log bread baking experiences
+- User can upload images of their bread
+- User can write notes about their bread
+- User can view past entries
+- User can view a page of the latest 10 entries posted from users
+- Authenticate user with Google Oauth
+
+Front-end
+- React
+- Vite
+- TailwindCSS
+
+Backend
+- Python
+- uv
+- FastAPI with Mangum for AWS Lambda compatibility
+- using SQLAlchemy + flask-migrate for data migrations
+- with Session Storage
+- with CSRF protection
+
+Image Storage:
+- AWS S3
+- Cloudfront for CDN
+
+Database:
+- RDS Postgres
+
+Authentication
+- Google Oauth
+
+Continuous Deployment:
+- Manual github action to deploy
+-- Front-end build Vite and copy files to S3
+-- Backend create migration, deploy migration to RDS
+-- Backend deploy to AWS Lambda
+
+Infrastructure through code:
+Use Terraform to manage infrastructure
+- VPC us-east-1
+- Internet Gateway
+- RDS instance
+- Lambda functions managed by API Gateway
+- Cloudfront / S3 for front-end
+- Cloudfront / S3 for image storage
+- IAM roles / policies for Lambda to access RDS, 
+- IAM roles / policies for Lambda to read/write to S3
+
+Subnets:
+- Private subnet:
+-- RDS
+-- Lambda
+
+Security Groups:
+- ALB: Allow 80, 443
+- RDS: Allow 5432 from Lambda 
+- Lambda: Allow 80, 443, 5432 outbound
+
