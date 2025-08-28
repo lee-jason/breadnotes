@@ -1,29 +1,17 @@
 # S3 Bucket for Images (Production)
 resource "aws_s3_bucket" "images" {
-  bucket = "${local.name_prefix}-images-${random_string.bucket_suffix.result}"
+  bucket = "${local.name_prefix}-prod-images"
 
   tags = local.common_tags
 }
 
 # S3 Bucket for Images (Development)
 resource "aws_s3_bucket" "dev_images" {
-  bucket = "breadnotes-dev-images-${random_string.dev_bucket_suffix.result}"
+  bucket = "breadnotes-dev-images"
 
   tags = merge(local.common_tags, {
     Environment = "dev"
   })
-}
-
-resource "random_string" "bucket_suffix" {
-  length  = 8
-  special = false
-  upper   = false
-}
-
-resource "random_string" "dev_bucket_suffix" {
-  length  = 8
-  special = false
-  upper   = false
 }
 
 # S3 Bucket Versioning (Production)
@@ -121,16 +109,11 @@ resource "aws_s3_bucket_policy" "dev_images" {
 
 # S3 Bucket for Frontend
 resource "aws_s3_bucket" "frontend" {
-  bucket = "${local.name_prefix}-frontend-${random_string.frontend_bucket_suffix.result}"
+  bucket = "${local.name_prefix}-prod-frontend"
 
   tags = local.common_tags
 }
 
-resource "random_string" "frontend_bucket_suffix" {
-  length  = 8
-  special = false
-  upper   = false
-}
 
 # S3 Bucket Server Side Encryption for Frontend
 resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {

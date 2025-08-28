@@ -110,7 +110,6 @@ This will start:
 - PostgreSQL database
 - FastAPI backend
 - React frontend  
-- MinIO (local S3)
 
 See [DOCKER_README.md](DOCKER_README.md) for detailed Docker setup instructions.
 

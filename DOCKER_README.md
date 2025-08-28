@@ -12,7 +12,7 @@ make dev
 
 That's it! This will:
 - Build all Docker images
-- Start PostgreSQL, API, Web, and MinIO services
+- Start PostgreSQL, API, Web
 - Run database migrations
 - Display access URLs
 
@@ -23,7 +23,6 @@ The development environment includes:
 - **PostgreSQL** (port 5432): Database
 - **FastAPI** (port 8000): Backend API
 - **React** (port 3000): Frontend application  
-- **MinIO** (ports 9000/9001): Local S3-compatible storage
 
 ## Access Points
 
@@ -32,7 +31,6 @@ After running `make dev`:
 - **Frontend**: http://localhost:3000
 - **API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
-- **MinIO Console**: http://localhost:9001 (minioadmin/minioadmin123)
 
 ## Available Commands
 
@@ -97,8 +95,6 @@ Run `make env-setup` to create environment files from examples.
 6. Update `.env` with your `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
 
 ### AWS S3 Setup (Optional for Development)
-
-For local development, you can use the included MinIO service instead of AWS S3.
 
 To use AWS S3:
 1. Update `.env` with your AWS credentials

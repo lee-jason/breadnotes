@@ -14,9 +14,15 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
+resource "random_string" "keypair_suffix" {
+  length  = 6
+  special = false
+  upper   = false
+}
+
 # Key Pair for EC2 access
 resource "aws_key_pair" "main" {
-  key_name   = "${local.name_prefix}-keypair"
+  key_name   = "${local.name_prefix}-keypair-${random_string.keypair_suffix.result}"
   public_key = var.ec2_public_key
 
   tags = local.common_tags
