@@ -1,0 +1,73 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Create environment file
+      run: |
+        cat > .env << EOF
+        DATABASE_URL=${{ secrets.DATABASE_URL }}
+        GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+        GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+        SECRET_KEY=${{ secrets.SECRET_KEY }}
+        AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION=${{ secrets.AWS_REGION }}
+        S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
+        CLOUDFRONT_DOMAIN=${{ secrets.CLOUDFRONT_DOMAIN }}
+        FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+        EOF
+
+    - name: Copy environment file to EC2
+      run: |
+        scp -i ~/.ssh/id_rsa .env ec2-user@${{ secrets.EC2_HOST }}:/tmp/.env
+
+    - name: Deploy to EC2
+      run: |
+        ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
+          # Move environment file to application directory
+          sudo mv /tmp/.env /opt/breadnotes/.env
+          sudo chown breadnotes:breadnotes /opt/breadnotes/.env
+          sudo chmod 600 /opt/breadnotes/.env
+          
+          # Download and run deployment script
+          curl -sSL https://raw.githubusercontent.com/jasonleecodes/breadnotes/main/scripts/deploy.sh | sudo bash
+        EOF
+
+    - name: Verify deployment
+      run: |
+        sleep 10
+        ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
+          # Check if service is running
+          if sudo systemctl is-active --quiet breadnotes; then
+            echo "✓ BreadNotes service is running"
+            
+            # Optional: Test if the service responds
+            if curl -f -m 10 http://localhost:8000/ > /dev/null 2>&1; then
+              echo "✓ API is responding"
+            else
+              echo "⚠ API is not responding (might be normal for some endpoints)"
+            fi
+          else
+            echo "✗ BreadNotes service is not running"
+            sudo systemctl status breadnotes --no-pager -l
+            exit 1
+          fi
+        EOF

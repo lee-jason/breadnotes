@@ -1,0 +1,14 @@
+aws_region = "us-east-1"
+project_name = "breadnotes"
+environment = "prod"
+
+# Database
+db_username = "breadnotes"
+db_password = "your-secure-database-password"
+
+# Google OAuth
+google_client_id = "your-google-client-id"
+google_client_secret = "your-google-client-secret"
+
+# Application
+secret_key = "your-secret-key-for-sessions"

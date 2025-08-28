@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: breadnotes_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-breadnotes}
+      POSTGRES_USER: ${POSTGRES_USER:-breadnotes}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-breadnotes_dev}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-breadnotes} -d ${POSTGRES_DB:-breadnotes}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - breadnotes_network
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: breadnotes_api
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-breadnotes}:${POSTGRES_PASSWORD:-breadnotes_dev}@db:5432/${POSTGRES_DB:-breadnotes}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-breadnotes-dev-images}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./api:/app
+      # - /app/.venv  # Exclude .venv from bind mount
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - breadnotes_network
+    command: ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: breadnotes_web
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    volumes:
+      - ./web:/app
+      - /app/node_modules  # Exclude node_modules from bind mount
+    depends_on:
+      - api
+    networks:
+      - breadnotes_network
+
+
+volumes:
+  postgres_data:
+
+networks:
+  breadnotes_network:
+    driver: bridge
