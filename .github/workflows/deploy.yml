@@ -130,7 +130,7 @@ jobs:
         cd web
         npm ci
         # Set the API URL to the CloudFront distribution
-        echo "VITE_API_URL=https://${{ secrets.CLOUDFRONT_DOMAIN }}" > web/.env
+        echo "VITE_API_URL=https://${{ secrets.CLOUDFRONT_DOMAIN }}" > .env
         npm run build
         
         echo "Deploying frontend to S3..."
