@@ -75,7 +75,7 @@ jobs:
       run: |
         ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
           # Move and rename environment file to application directory
-          sudo mv /tmp/breadnotes.env /opt/breadnotes/.env
+          sudo cp /tmp/breadnotes.env /opt/breadnotes/.env
           sudo chown breadnotes:breadnotes /opt/breadnotes/.env
           sudo chmod 600 /opt/breadnotes/.env
           
