@@ -35,6 +35,13 @@ jobs:
         FRONTEND_URL=${{ secrets.FRONTEND_URL }}
         EOF
 
+    - name: Debug environment file
+      run: |
+        ls -la .env
+        echo "--- .env contents ---"
+        cat .env
+        echo "--- end .env ---"
+
     - name: Copy environment file to EC2
       run: |
         scp -i ~/.ssh/id_rsa .env ec2-user@${{ secrets.EC2_HOST }}:/tmp/.env
