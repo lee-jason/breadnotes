@@ -22,7 +22,7 @@ jobs:
 
     - name: Create environment file
       run: |
-        cat > .env << EOF
+        cat > breadnotes.env << EOF
         DATABASE_URL=${{ secrets.DATABASE_URL }}
         GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
         GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
@@ -37,15 +37,15 @@ jobs:
 
     - name: Debug environment file
       run: |
-        ls -la .env
-        echo "--- .env contents ---"
-        cat .env
-        echo "--- end .env ---"
+        ls -la breadnotes.env
+        echo "--- breadnotes.env contents ---"
+        cat breadnotes.env
+        echo "--- end breadnotes.env ---"
 
     - name: Copy environment file to EC2
       run: |
-        echo "Attempting to copy .env file..."
-        scp -v -i ~/.ssh/id_rsa .env ec2-user@${{ secrets.EC2_HOST }}:/tmp/.env
+        echo "Attempting to copy breadnotes.env file..."
+        scp -v -i ~/.ssh/id_rsa breadnotes.env ec2-user@${{ secrets.EC2_HOST }}:/tmp/breadnotes.env
         echo "scp exit code: $?"
 
     - name: Copy deployment script to EC2
@@ -57,19 +57,19 @@ jobs:
         ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
           echo "Files in /tmp:"
           ls -la /tmp/*.env /tmp/*.sh 2>/dev/null || echo "Some files missing"
-          echo "Checking .env file specifically:"
-          if [ -f /tmp/.env ]; then
-            echo ".env exists, size: $(stat -f%z /tmp/.env 2>/dev/null || stat -c%s /tmp/.env)"
+          echo "Checking breadnotes.env file specifically:"
+          if [ -f /tmp/breadnotes.env ]; then
+            echo "breadnotes.env exists, size: $(stat -c%s /tmp/breadnotes.env)"
           else
-            echo ".env file does not exist"
+            echo "breadnotes.env file does not exist"
           fi
         EOF
 
     - name: Deploy to EC2
       run: |
         ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
-          # Move environment file to application directory
-          sudo mv /tmp/.env /opt/breadnotes/.env
+          # Move and rename environment file to application directory
+          sudo mv /tmp/breadnotes.env /opt/breadnotes/.env
           sudo chown breadnotes:breadnotes /opt/breadnotes/.env
           sudo chmod 600 /opt/breadnotes/.env
           
