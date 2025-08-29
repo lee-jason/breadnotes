@@ -94,6 +94,7 @@ jobs:
           echo "Stopping existing containers..."
           sudo docker stop breadnotes-api || true
           sudo docker rm breadnotes-api || true
+          sudo docker container prune
           
           # Wait a moment for port to be released
           sleep 5
@@ -102,7 +103,6 @@ jobs:
           echo "Starting new container..."
           sudo docker run -d \
             --name breadnotes-api \
-            --restart unless-stopped \
             --env-file /opt/breadnotes/.env \
             -p 8000:8000 \
             breadnotes-api
@@ -130,7 +130,7 @@ jobs:
         cd web
         npm ci
         # Set the API URL to the CloudFront distribution
-        echo "VITE_API_URL=https://${{ secrets.CLOUDFRONT_DOMAIN }}" >> web/.env
+        echo "VITE_API_URL=https://${{ secrets.CLOUDFRONT_DOMAIN }}" > web/.env
         npm run build
         
         echo "Deploying frontend to S3..."
