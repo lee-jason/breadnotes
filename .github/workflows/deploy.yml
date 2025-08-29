@@ -82,31 +82,29 @@ jobs:
           sudo cp /tmp/breadnotes.env /opt/breadnotes/.env
           sudo chmod 600 /opt/breadnotes/.env
           
-          # Load Docker image
-          echo "Loading Docker image..."
+          # Load the new Docker image
+          echo "Loading new Docker image..."
           sudo docker load < /tmp/breadnotes-api.tar.gz
           
-          # Run database migrations
+          # Run database migrations with the new image
           echo "Running database migrations..."
           sudo docker run --rm --env-file /opt/breadnotes/.env breadnotes-api uv run alembic upgrade head || echo "Migration failed or no migrations needed"
           
-          # Stop and remove existing container
-          echo "Stopping existing containers..."
+          # Stop and remove old container to free port 8000
+          echo "Stopping old container..."
           sudo docker stop breadnotes-api || true
           sudo docker rm breadnotes-api || true
-          
-          # Wait a moment for port to be released
-          sleep 5
           
           # Start new container
           echo "Starting new container..."
           sudo docker run -d \
             --name breadnotes-api \
+            --restart unless-stopped \
             --env-file /opt/breadnotes/.env \
             -p 8000:8000 \
             breadnotes-api
           
-          # Wait a moment for container to start
+          # Wait for container to start
           sleep 5
           
           # Verify container is running
@@ -117,6 +115,10 @@ jobs:
             sudo docker logs breadnotes-api
             exit 1
           fi
+          
+          # Clean up old images
+          echo "Cleaning up old images..."
+          sudo docker image prune -f
         EOF
 
     - name: Build and Deploy Frontend
@@ -126,6 +128,7 @@ jobs:
         npm ci
         # Set the API URL to the CloudFront distribution
         echo "VITE_API_URL=https://${{ secrets.CLOUDFRONT_DOMAIN }}" > .env
+        cat .env
         npm run build
         
         echo "Deploying frontend to S3..."
