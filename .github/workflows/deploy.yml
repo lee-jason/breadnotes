@@ -94,6 +94,12 @@ jobs:
           echo "Stopping existing containers..."
           sudo docker stop breadnotes-api || true
           sudo docker rm breadnotes-api || true
+          # Purge unused Docker images
+          echo "Removing unused Docker images..."
+          sudo docker image prune -af
+          
+          # Wait a moment for port to be released
+          sleep 2
           
           # Start new container
           echo "Starting new container..."
