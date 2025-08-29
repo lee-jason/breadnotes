@@ -55,11 +55,17 @@ jobs:
     - name: Verify files copied to EC2
       run: |
         ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
-          echo "Files in /tmp:"
+          echo "/tmp directory permissions:"
+          ls -ld /tmp
+          echo "All files in /tmp:"
+          ls -la /tmp/
+          echo "Looking for our specific files:"
           ls -la /tmp/*.env /tmp/*.sh 2>/dev/null || echo "Some files missing"
           echo "Checking breadnotes.env file specifically:"
           if [ -f /tmp/breadnotes.env ]; then
             echo "breadnotes.env exists, size: $(stat -c%s /tmp/breadnotes.env)"
+            echo "First few lines of breadnotes.env:"
+            head -3 /tmp/breadnotes.env
           else
             echo "breadnotes.env file does not exist"
           fi
