@@ -89,6 +89,34 @@ jobs:
           sudo /tmp/deploy.sh
         EOF
 
+    - name: Build and Deploy Frontend
+      run: |
+        echo "Building frontend..."
+        cd web
+        npm ci
+        # Set the API URL to the CloudFront distribution
+        VITE_API_URL="https://${{ secrets.CLOUDFRONT_DOMAIN }}"
+        echo "Building with API URL: $VITE_API_URL"
+        npm run build
+        
+        echo "Deploying frontend to S3..."
+        # Configure AWS CLI with the same credentials
+        aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws configure set default.region ${{ secrets.AWS_REGION }}
+        
+        # Sync build files to S3 frontend bucket
+        aws s3 sync dist/ s3://breadnotes-prod-frontend --delete
+        
+        # Invalidate CloudFront cache
+        DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='CloudFront for breadnotes-prod-frontend'].Id" --output text)
+        if [ ! -z "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
+          echo "Invalidating CloudFront distribution: $DISTRIBUTION_ID"
+          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+        else
+          echo "No CloudFront distribution found for frontend"
+        fi
+
     - name: Verify deployment
       run: |
         sleep 10
