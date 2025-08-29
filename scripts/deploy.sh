@@ -12,7 +12,7 @@ echo -e "${GREEN}Starting BreadNotes deployment...${NC}"
 # Configuration
 APP_DIR="/opt/breadnotes"
 SERVICE_NAME="breadnotes"
-REPO_URL="https://github.com/jasonleecodes/breadnotes.git"  # Update with your repo URL
+REPO_URL="https://github.com/lee-jason/breadnotes.git"  # Update with your actual repo URL
 
 # Create application directory if it doesn't exist
 sudo mkdir -p $APP_DIR

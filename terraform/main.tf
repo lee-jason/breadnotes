@@ -6,6 +6,14 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+    
+  backend "s3" {
+    # Note: bucket name will be set via terraform init -backend-config
+    key    = "breadnotes-terraform/terraform.tfstate"
+    bucket = "terraform-state-jasonl"
+    region = "us-east-1"
+  }
 }
 
 provider "aws" {

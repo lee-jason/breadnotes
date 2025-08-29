@@ -39,6 +39,10 @@ jobs:
       run: |
         scp -i ~/.ssh/id_rsa .env ec2-user@${{ secrets.EC2_HOST }}:/tmp/.env
 
+    - name: Copy deployment script to EC2
+      run: |
+        scp -i ~/.ssh/id_rsa scripts/deploy.sh ec2-user@${{ secrets.EC2_HOST }}:/tmp/deploy.sh
+
     - name: Deploy to EC2
       run: |
         ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
@@ -47,8 +51,9 @@ jobs:
           sudo chown breadnotes:breadnotes /opt/breadnotes/.env
           sudo chmod 600 /opt/breadnotes/.env
           
-          # Download and run deployment script
-          curl -sSL https://raw.githubusercontent.com/jasonleecodes/breadnotes/main/scripts/deploy.sh | sudo bash
+          # Make deployment script executable and run it
+          chmod +x /tmp/deploy.sh
+          sudo /tmp/deploy.sh
         EOF
 
     - name: Verify deployment

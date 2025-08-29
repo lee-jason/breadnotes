@@ -3,6 +3,8 @@ resource "aws_s3_bucket" "images" {
   bucket = "${local.name_prefix}-prod-images"
 
   tags = local.common_tags
+  force_destroy = true
+
 }
 
 # S3 Bucket for Images (Development)
@@ -12,6 +14,8 @@ resource "aws_s3_bucket" "dev_images" {
   tags = merge(local.common_tags, {
     Environment = "dev"
   })
+  force_destroy = true
+
 }
 
 # S3 Bucket Versioning (Production)
@@ -112,6 +116,7 @@ resource "aws_s3_bucket" "frontend" {
   bucket = "${local.name_prefix}-prod-frontend"
 
   tags = local.common_tags
+  force_destroy = true
 }
 
 
