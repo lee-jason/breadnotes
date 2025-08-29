@@ -1,7 +1,7 @@
 # CloudFront Distribution for API (SSL Termination)
 resource "aws_cloudfront_distribution" "api" {
   origin {
-    domain_name = aws_eip.ec2.public_dns
+    domain_name = aws_instance.api_server.public_dns
     origin_id   = "ec2-api-origin"
 
     custom_origin_config {
@@ -50,6 +50,13 @@ resource "aws_cloudfront_distribution" "api" {
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-api-cloudfront"
   })
+
+  # Force CloudFront to update when EC2 instance changes
+  lifecycle {
+    replace_triggered_by = [
+      aws_instance.api_server
+    ]
+  }
 }
 
 # CloudFront Origin Access Identity for Images (Production)
