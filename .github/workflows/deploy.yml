@@ -64,29 +64,57 @@ jobs:
         echo "Transferring Docker image to EC2..."
         scp -i ~/.ssh/id_rsa breadnotes-api.tar.gz ec2-user@${{ secrets.EC2_HOST }}:/tmp/breadnotes-api.tar.gz
 
-    - name: Copy deployment script to EC2
-      run: |
-        scp -i ~/.ssh/id_rsa scripts/deploy.sh ec2-user@${{ secrets.EC2_HOST }}:/tmp/deploy.sh
-
     - name: Verify files copied to EC2
       run: |
         ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
           echo "Checking transferred files:"
-          ls -lh /tmp/breadnotes.env /tmp/deploy.sh /tmp/breadnotes-api.tar.gz
+          ls -lh /tmp/breadnotes.env /tmp/breadnotes-api.tar.gz
           echo "Docker image size: $(stat -c%s /tmp/breadnotes-api.tar.gz) bytes"
         EOF
 
     - name: Deploy to EC2
       run: |
         ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
-          # Move and rename environment file to application directory
+          # Create application directory
+          sudo mkdir -p /opt/breadnotes
+          
+          # Move and setup environment file
           sudo cp /tmp/breadnotes.env /opt/breadnotes/.env
-          sudo chown breadnotes:breadnotes /opt/breadnotes/.env
           sudo chmod 600 /opt/breadnotes/.env
           
-          # Make deployment script executable and run it
-          chmod +x /tmp/deploy.sh
-          sudo /tmp/deploy.sh
+          # Load Docker image
+          echo "Loading Docker image..."
+          sudo docker load < /tmp/breadnotes-api.tar.gz
+          
+          # Run database migrations
+          echo "Running database migrations..."
+          sudo docker run --rm --env-file /opt/breadnotes/.env breadnotes-api uv run alembic upgrade head || echo "Migration failed or no migrations needed"
+          
+          # Stop and remove existing container
+          echo "Stopping existing containers..."
+          sudo docker stop breadnotes-api || true
+          sudo docker rm breadnotes-api || true
+          
+          # Start new container
+          echo "Starting new container..."
+          sudo docker run -d \
+            --name breadnotes-api \
+            --restart unless-stopped \
+            --env-file /opt/breadnotes/.env \
+            -p 8000:8000 \
+            breadnotes-api
+          
+          # Wait a moment for container to start
+          sleep 5
+          
+          # Verify container is running
+          if sudo docker ps | grep -q breadnotes-api; then
+            echo "✓ Container is running"
+          else
+            echo "✗ Container failed to start"
+            sudo docker logs breadnotes-api
+            exit 1
+          fi
         EOF
 
     - name: Build and Deploy Frontend
@@ -121,19 +149,25 @@ jobs:
       run: |
         sleep 10
         ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
-          # Check if service is running
-          if sudo systemctl is-active --quiet breadnotes; then
-            echo "✓ BreadNotes service is running"
+          # Check if container is running
+          if sudo docker ps | grep -q breadnotes-api; then
+            echo "✓ BreadNotes container is running"
             
-            # Optional: Test if the service responds
-            if curl -f -m 10 http://localhost:8000/ > /dev/null 2>&1; then
-              echo "✓ API is responding"
+            # Test if the service responds to health check
+            if curl -f -m 10 http://localhost:8000/api/health > /dev/null 2>&1; then
+              echo "✓ API health check is responding"
             else
-              echo "⚠ API is not responding (might be normal for some endpoints)"
+              echo "⚠ API health check is not responding (trying root endpoint)"
+              if curl -f -m 10 http://localhost:8000/ > /dev/null 2>&1; then
+                echo "✓ API root endpoint is responding"
+              else
+                echo "⚠ API is not responding (might be normal depending on endpoints)"
+              fi
             fi
           else
-            echo "✗ BreadNotes service is not running"
-            sudo systemctl status breadnotes --no-pager -l
+            echo "✗ BreadNotes container is not running"
+            sudo docker ps -a | grep breadnotes-api || echo "No breadnotes-api container found"
+            sudo docker logs breadnotes-api || echo "No logs available"
             exit 1
           fi
         EOF
