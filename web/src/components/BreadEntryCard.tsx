@@ -1,5 +1,5 @@
 import React from 'react';
-import { BreadEntry } from '../types';
+import type { BreadEntry } from '../types';
 
 interface BreadEntryCardProps {
   entry: BreadEntry;

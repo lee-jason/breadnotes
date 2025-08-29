@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { breadService } from '../services/api';
-import { CreateBreadEntryData } from '../types';
+import type { CreateBreadEntryData } from '../types';
 
 export const useBreadEntries = () => {
   const { data: entries = [], isLoading, refetch } = useQuery({
