@@ -94,7 +94,6 @@ jobs:
           echo "Stopping existing containers..."
           sudo docker stop breadnotes-api || true
           sudo docker rm breadnotes-api || true
-          sudo docker container prune
           
           # Wait a moment for port to be released
           sleep 5
@@ -118,10 +117,6 @@ jobs:
             sudo docker logs breadnotes-api
             exit 1
           fi
-
-          # Purge unused Docker images
-          echo "Removing unused Docker images..."
-          sudo docker image prune -af
         EOF
 
     - name: Build and Deploy Frontend
