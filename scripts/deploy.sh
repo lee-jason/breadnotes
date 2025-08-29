@@ -22,45 +22,46 @@ cd $APP_DIR
 echo -e "${YELLOW}Stopping service...${NC}"
 sudo systemctl stop $SERVICE_NAME || true
 
-# Clean slate - remove everything and start fresh
-echo -e "${YELLOW}Cleaning application directory...${NC}"
-sudo rm -rf $APP_DIR/*
-sudo rm -rf $APP_DIR/.[^.]*  # Remove hidden files but keep . and ..
+# Load the Docker image
+echo -e "${YELLOW}Loading Docker image...${NC}"
+sudo docker load < /tmp/breadnotes-api.tar.gz
 
-# Clone fresh copy of the repository
-echo -e "${YELLOW}Cloning latest code...${NC}"
-sudo git clone $REPO_URL .
+# Clean up any old containers
+echo -e "${YELLOW}Cleaning up old containers...${NC}"
+sudo docker stop breadnotes-api || true
+sudo docker rm breadnotes-api || true
 
-# Set ownership
-sudo chown -R breadnotes:breadnotes $APP_DIR
+# Run database migrations using the Docker image
+echo -e "${YELLOW}Running database migrations...${NC}"
+sudo docker run --rm --env-file /opt/breadnotes/.env breadnotes-api alembic upgrade head || echo "Migration failed or no migrations needed"
 
-# Switch to breadnotes user for the rest
-sudo -u breadnotes bash << 'EOF'
-cd /opt/breadnotes/api
+# Create systemd service file directly
+echo -e "${YELLOW}Setting up systemd service...${NC}"
+sudo tee /etc/systemd/system/breadnotes.service > /dev/null << 'EOF'
+[Unit]
+Description=BreadNotes FastAPI Application
+After=network.target docker.service
+Requires=docker.service
 
-# Create virtual environment if it doesn't exist
-if [ ! -d "../.venv" ]; then
-    echo "Creating virtual environment..."
-    cd ..
-    /home/ec2-user/.cargo/bin/uv venv
-    cd api
-fi
+[Service]
+Type=exec
+User=root
+Group=docker
+WorkingDirectory=/opt/breadnotes
+EnvironmentFile=/opt/breadnotes/.env
+ExecStartPre=/usr/bin/docker stop breadnotes-api || true
+ExecStartPre=/usr/bin/docker rm breadnotes-api || true
+ExecStart=/usr/bin/docker run --name breadnotes-api --rm --env-file /opt/breadnotes/.env -p 8000:8000 breadnotes-api
+ExecStop=/usr/bin/docker stop breadnotes-api
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
 
-# Install/update dependencies
-echo "Installing dependencies..."
-../.venv/bin/uv sync
-
-# Run database migrations
-echo "Running database migrations..."
-../.venv/bin/alembic upgrade head || echo "Migration failed or no migrations needed"
+[Install]
+WantedBy=multi-user.target
 EOF
 
-# Create environment file from GitHub secrets (this will be handled by GitHub Actions)
-echo -e "${YELLOW}Environment file should be created by GitHub Actions...${NC}"
-
-# Copy and enable systemd service
-echo -e "${YELLOW}Setting up systemd service...${NC}"
-sudo cp $APP_DIR/scripts/breadnotes.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable $SERVICE_NAME
 

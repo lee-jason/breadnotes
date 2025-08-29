@@ -5,11 +5,14 @@
 yum update -y
 
 # Install required packages
-yum install -y python3 python3-pip git
+yum install -y git docker
 
-# Install uv (Python package manager)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-source $HOME/.cargo/env
+# Start and enable Docker
+systemctl start docker
+systemctl enable docker
+
+# Add ec2-user to docker group
+usermod -a -G docker ec2-user
 
 # Create application directory
 mkdir -p /opt/breadnotes
