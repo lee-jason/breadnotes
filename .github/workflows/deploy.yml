@@ -44,11 +44,26 @@ jobs:
 
     - name: Copy environment file to EC2
       run: |
-        scp -i ~/.ssh/id_rsa .env ec2-user@${{ secrets.EC2_HOST }}:/tmp/.env
+        echo "Attempting to copy .env file..."
+        scp -v -i ~/.ssh/id_rsa .env ec2-user@${{ secrets.EC2_HOST }}:/tmp/.env
+        echo "scp exit code: $?"
 
     - name: Copy deployment script to EC2
       run: |
         scp -i ~/.ssh/id_rsa scripts/deploy.sh ec2-user@${{ secrets.EC2_HOST }}:/tmp/deploy.sh
+
+    - name: Verify files copied to EC2
+      run: |
+        ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
+          echo "Files in /tmp:"
+          ls -la /tmp/*.env /tmp/*.sh 2>/dev/null || echo "Some files missing"
+          echo "Checking .env file specifically:"
+          if [ -f /tmp/.env ]; then
+            echo ".env exists, size: $(stat -f%z /tmp/.env 2>/dev/null || stat -c%s /tmp/.env)"
+          else
+            echo ".env file does not exist"
+          fi
+        EOF
 
     - name: Deploy to EC2
       run: |
