@@ -50,3 +50,20 @@ output "frontend_bucket_name" {
   description = "Name of the frontend S3 bucket"
   value       = aws_s3_bucket.frontend.bucket
 }
+
+# Certificate ARN
+output "wildcard_certificate_arn" {
+  description = "ARN of the wildcard SSL certificate"
+  value       = aws_acm_certificate.wildcard.arn
+}
+
+# Custom domain URLs
+output "api_custom_domain_url" {
+  description = "Custom domain URL for the API"
+  value       = "https://api.breadnotes.jasonjl.me"
+}
+
+output "frontend_custom_domain_url" {
+  description = "Custom domain URL for the frontend"
+  value       = "https://breadnotes.jasonjl.me"
+}

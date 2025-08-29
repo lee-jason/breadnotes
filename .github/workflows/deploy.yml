@@ -34,7 +34,7 @@ jobs:
         CLOUDFRONT_DOMAIN=${{ secrets.CLOUDFRONT_DOMAIN }}
         FRONTEND_URL=${{ secrets.FRONTEND_URL }}
         EOF
-
+    
     - name: Debug environment file
       run: |
         ls -la breadnotes.env
@@ -123,8 +123,7 @@ jobs:
         cd web
         npm ci
         # Set the API URL to the CloudFront distribution
-        VITE_API_URL="https://${{ secrets.CLOUDFRONT_DOMAIN }}"
-        echo "Building with API URL: $VITE_API_URL"
+        echo "VITE_API_URL=https://${{ secrets.CLOUDFRONT_DOMAIN }}" >> web/.env
         npm run build
         
         echo "Deploying frontend to S3..."
