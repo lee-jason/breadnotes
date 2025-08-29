@@ -22,14 +22,14 @@ cd $APP_DIR
 echo -e "${YELLOW}Stopping service...${NC}"
 sudo systemctl stop $SERVICE_NAME || true
 
-# Clone or pull latest code
-if [ -d ".git" ]; then
-    echo -e "${YELLOW}Pulling latest code...${NC}"
-    sudo git pull origin main
-else
-    echo -e "${YELLOW}Cloning repository...${NC}"
-    sudo git clone $REPO_URL .
-fi
+# Clean slate - remove everything and start fresh
+echo -e "${YELLOW}Cleaning application directory...${NC}"
+sudo rm -rf $APP_DIR/*
+sudo rm -rf $APP_DIR/.[^.]*  # Remove hidden files but keep . and ..
+
+# Clone fresh copy of the repository
+echo -e "${YELLOW}Cloning latest code...${NC}"
+sudo git clone $REPO_URL .
 
 # Set ownership
 sudo chown -R breadnotes:breadnotes $APP_DIR
