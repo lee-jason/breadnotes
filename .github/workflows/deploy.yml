@@ -127,7 +127,7 @@ jobs:
         cd web
         npm ci
         # Set the API URL to the CloudFront distribution
-        echo "VITE_API_URL=https://${{ secrets.CLOUDFRONT_DOMAIN }}" > .env
+        echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > .env
         cat .env
         npm run build
         
