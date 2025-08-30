@@ -133,6 +133,7 @@ resource "aws_cloudfront_distribution" "frontend" {
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
+  comment             = "CloudFront distribution for BreadNotes frontend"
 
   # Custom domain names for frontend
   aliases = ["breadnotes.jasonjl.me"]

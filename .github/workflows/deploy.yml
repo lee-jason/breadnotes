@@ -156,11 +156,11 @@ jobs:
         aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws configure set default.region ${{ secrets.AWS_REGION }}
         
-        # Sync build files to S3 frontend bucket
-        aws s3 sync dist/ s3://breadnotes-prod-frontend --delete
+        # Sync build files to S3 frontend bucket (force overwrite)
+        aws s3 sync dist/ s3://breadnotes-prod-frontend --delete --exact-timestamps --size-only
         
-        # Invalidate CloudFront cache
-        DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='CloudFront for breadnotes-prod-frontend'].Id" --output text)
+        # Invalidate CloudFront cache - find frontend distribution by S3 origin
+        DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[?contains(DomainName, 'breadnotes-prod-frontend')]].Id | [0]" --output text)
         if [ ! -z "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
           echo "Invalidating CloudFront distribution: $DISTRIBUTION_ID"
           aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
