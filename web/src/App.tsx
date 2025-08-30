@@ -5,6 +5,7 @@ import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { CreateEntry } from './pages/CreateEntry';
 import { MyEntries } from './pages/MyEntries';
+import { LearnMore } from './pages/LearnMore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,6 +26,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/create" element={<CreateEntry />} />
             <Route path="/my-entries" element={<MyEntries />} />
+            <Route path="/learn-more" element={<LearnMore />} />
           </Routes>
         </Layout>
       </Router>

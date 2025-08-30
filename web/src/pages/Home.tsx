@@ -27,9 +27,12 @@ export const Home: React.FC = () => {
             >
               Get Started
             </Link>
-            <button className="text-amber-600 hover:text-amber-700 px-6 py-3 rounded-lg font-medium">
+            <Link
+              to="/learn-more"
+              className="text-amber-600 hover:text-amber-700 px-6 py-3 rounded-lg font-medium inline-block"
+            >
               Learn More
-            </button>
+            </Link>
           </div>
         )}
       </div>
