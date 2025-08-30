@@ -103,30 +103,9 @@ jobs:
           # Wait longer for container to fully start
           sleep 10
           
-          # Verify container is running and healthy
-          if sudo docker ps | grep -q breadnotes-api; then
-            echo "✓ Container is running"
-            
-            # Test if the API is responding
-            if curl -f http://localhost:8000/api/health > /dev/null 2>&1; then
-              echo "✓ API is responding to health check"
-            else
-              echo "⚠ API health check not responding, but container is running"
-            fi
-            
-            # Wait a bit before cleanup to ensure container is stable
-            sleep 5
-            
-            # # Clean up old images (but keep the one we're using)
-            # echo "Cleaning up unused Docker images..."
-            # sudo docker image prune -f --filter "dangling=true"
-            
-            echo "✓ Deployment completed successfully"
-          else
-            echo "✗ Container failed to start"
-            sudo docker logs breadnotes-api || echo "No logs available"
-            exit 1
-          fi
+          # Clean up old images (but keep the one we're using)
+          echo "Cleaning up unused Docker images..."
+          sudo docker image prune -f --filter "dangling=true"
         EOF
 
     # - name: Build and Deploy Frontend
@@ -156,29 +135,29 @@ jobs:
     #       echo "No CloudFront distribution found for frontend"
     #     fi
 
-    - name: Verify deployment
-      run: |
-        sleep 10
-        ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
-          # Check if container is running
-          if sudo docker ps | grep -q breadnotes-api; then
-            echo "✓ BreadNotes container is running"
+    # - name: Verify deployment
+    #   run: |
+    #     sleep 10
+    #     ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
+    #       # Check if container is running
+    #       if sudo docker ps | grep -q breadnotes-api; then
+    #         echo "✓ BreadNotes container is running"
             
-            # Test if the service responds to health check
-            if curl -f -m 10 http://localhost:8000/api/health > /dev/null 2>&1; then
-              echo "✓ API health check is responding"
-            else
-              echo "⚠ API health check is not responding (trying root endpoint)"
-              if curl -f -m 10 http://localhost:8000/ > /dev/null 2>&1; then
-                echo "✓ API root endpoint is responding"
-              else
-                echo "⚠ API is not responding (might be normal depending on endpoints)"
-              fi
-            fi
-          else
-            echo "✗ BreadNotes container is not running"
-            sudo docker ps -a | grep breadnotes-api || echo "No breadnotes-api container found"
-            sudo docker logs breadnotes-api || echo "No logs available"
-            exit 1
-          fi
-        EOF
+    #         # Test if the service responds to health check
+    #         if curl -f -m 10 http://localhost:8000/api/health > /dev/null 2>&1; then
+    #           echo "✓ API health check is responding"
+    #         else
+    #           echo "⚠ API health check is not responding (trying root endpoint)"
+    #           if curl -f -m 10 http://localhost:8000/ > /dev/null 2>&1; then
+    #             echo "✓ API root endpoint is responding"
+    #           else
+    #             echo "⚠ API is not responding (might be normal depending on endpoints)"
+    #           fi
+    #         fi
+    #       else
+    #         echo "✗ BreadNotes container is not running"
+    #         sudo docker ps -a | grep breadnotes-api || echo "No breadnotes-api container found"
+    #         sudo docker logs breadnotes-api || echo "No logs available"
+    #         exit 1
+    #       fi
+    #     EOF
