@@ -129,9 +129,9 @@ jobs:
             # Wait a bit before cleanup to ensure container is stable
             sleep 5
             
-            # Clean up old images (but keep the one we're using)
-            echo "Cleaning up unused Docker images..."
-            sudo docker image prune -f --filter "dangling=true"
+            # # Clean up old images (but keep the one we're using)
+            # echo "Cleaning up unused Docker images..."
+            # sudo docker image prune -f --filter "dangling=true"
             
             echo "✓ Deployment completed successfully"
           else
