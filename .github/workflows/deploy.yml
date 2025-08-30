@@ -90,15 +90,18 @@ jobs:
           echo "Running database migrations..."
           sudo docker run --rm --env-file /opt/breadnotes/.env breadnotes-api uv run alembic upgrade head || echo "Migration failed or no migrations needed"
           
-          # Stop and remove old container to free port 8000
-          echo "Stopping old container..."
-          sudo docker stop breadnotes-api || true
-          echo "Removing old container..."
-          sudo docker rm breadnotes-api || true
+          # Clean up old container thoroughly
+          echo "Cleaning up old containers..."
+          sudo docker stop breadnotes-api 2>/dev/null || true
+          sleep 2
+          sudo docker rm breadnotes-api 2>/dev/null || true
           
-          # Force cleanup any containers with the same name
-          echo "Force removing any conflicting containers..."
-          sudo docker rm -f breadnotes-api || true
+          # Ensure no container with this name exists
+          if sudo docker ps -a --format "table {{.Names}}" | grep -q "breadnotes-api"; then
+            echo "Force removing remaining container..."
+            sudo docker rm -f breadnotes-api
+            sleep 3
+          fi
           
           # Start new container
           echo "Starting new container..."
