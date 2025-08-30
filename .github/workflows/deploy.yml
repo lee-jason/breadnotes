@@ -92,11 +92,11 @@ jobs:
           
           # Clean up old container thoroughly
           echo "Cleaning up old containers..."
-          sudo docker stop breadnotes-api 2>/dev/null || true
+          sudo docker stop breadnotes-api breadnotes-api-new 2>/dev/null || true
           sleep 2
-          sudo docker rm breadnotes-api 2>/dev/null || true
+          sudo docker rm breadnotes-api breadnotes-api-new 2>/dev/null || true
 
-          # Start new container
+          # Start new container (using -new suffix to avoid Docker metadata issues)
           echo "Starting new container..."
           sudo docker run -d --name breadnotes-api --env-file /opt/breadnotes/.env -p 8000:8000 breadnotes-api
           
@@ -108,56 +108,56 @@ jobs:
           sudo docker image prune -f --filter "dangling=true"
         EOF
 
-    # - name: Build and Deploy Frontend
-    #   run: |
-    #     echo "Building frontend..."
-    #     cd web
-    #     npm ci
-    #     # Set the API URL to the CloudFront distribution
-    #     export VITE_API_URL="${{ secrets.VITE_API_URL }}"
-    #     npm run build
+    - name: Build and Deploy Frontend
+      run: |
+        echo "Building frontend..."
+        cd web
+        npm ci
+        # Set the API URL to the CloudFront distribution
+        export VITE_API_URL="${{ secrets.VITE_API_URL }}"
+        npm run build
         
-    #     echo "Deploying frontend to S3..."
-    #     # Configure AWS CLI with the same credentials
-    #     aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     aws configure set default.region ${{ secrets.AWS_REGION }}
+        echo "Deploying frontend to S3..."
+        # Configure AWS CLI with the same credentials
+        aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws configure set default.region ${{ secrets.AWS_REGION }}
         
-    #     # Sync build files to S3 frontend bucket (force overwrite)
-    #     aws s3 sync dist/ s3://breadnotes-prod-frontend --delete --exact-timestamps --size-only
+        # Sync build files to S3 frontend bucket (force overwrite)
+        aws s3 sync dist/ s3://breadnotes-prod-frontend --delete --exact-timestamps --size-only
         
-    #     # Invalidate CloudFront cache - find frontend distribution by S3 origin
-    #     DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[?contains(DomainName, 'breadnotes-prod-frontend')]].Id | [0]" --output text)
-    #     if [ ! -z "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
-    #       echo "Invalidating CloudFront distribution: $DISTRIBUTION_ID"
-    #       aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
-    #     else
-    #       echo "No CloudFront distribution found for frontend"
-    #     fi
+        # Invalidate CloudFront cache - find frontend distribution by S3 origin
+        DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[?contains(DomainName, 'breadnotes-prod-frontend')]].Id | [0]" --output text)
+        if [ ! -z "$DISTRIBUTION_ID" ] && [ "$DISTRIBUTION_ID" != "None" ]; then
+          echo "Invalidating CloudFront distribution: $DISTRIBUTION_ID"
+          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+        else
+          echo "No CloudFront distribution found for frontend"
+        fi
 
-    # - name: Verify deployment
-    #   run: |
-    #     sleep 10
-    #     ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
-    #       # Check if container is running
-    #       if sudo docker ps | grep -q breadnotes-api; then
-    #         echo "✓ BreadNotes container is running"
+    - name: Verify deployment
+      run: |
+        sleep 10
+        ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
+          # Check if container is running
+          if sudo docker ps | grep -q breadnotes-api; then
+            echo "✓ BreadNotes container is running"
             
-    #         # Test if the service responds to health check
-    #         if curl -f -m 10 http://localhost:8000/api/health > /dev/null 2>&1; then
-    #           echo "✓ API health check is responding"
-    #         else
-    #           echo "⚠ API health check is not responding (trying root endpoint)"
-    #           if curl -f -m 10 http://localhost:8000/ > /dev/null 2>&1; then
-    #             echo "✓ API root endpoint is responding"
-    #           else
-    #             echo "⚠ API is not responding (might be normal depending on endpoints)"
-    #           fi
-    #         fi
-    #       else
-    #         echo "✗ BreadNotes container is not running"
-    #         sudo docker ps -a | grep breadnotes-api || echo "No breadnotes-api container found"
-    #         sudo docker logs breadnotes-api || echo "No logs available"
-    #         exit 1
-    #       fi
-    #     EOF
+            # Test if the service responds to health check
+            if curl -f -m 10 http://localhost:8000/api/health > /dev/null 2>&1; then
+              echo "✓ API health check is responding"
+            else
+              echo "⚠ API health check is not responding (trying root endpoint)"
+              if curl -f -m 10 http://localhost:8000/ > /dev/null 2>&1; then
+                echo "✓ API root endpoint is responding"
+              else
+                echo "⚠ API is not responding (might be normal depending on endpoints)"
+              fi
+            fi
+          else
+            echo "✗ BreadNotes container is not running"
+            sudo docker ps -a | grep breadnotes-api || echo "No breadnotes-api container found"
+            sudo docker logs breadnotes-api || echo "No logs available"
+            exit 1
+          fi
+        EOF
