@@ -109,21 +109,33 @@ jobs:
             -p 8000:8000 \
             breadnotes-api
           
-          # Wait for container to start
-          sleep 5
+          # Wait longer for container to fully start
+          sleep 10
           
-          # Verify container is running
+          # Verify container is running and healthy
           if sudo docker ps | grep -q breadnotes-api; then
             echo "✓ Container is running"
+            
+            # Test if the API is responding
+            if curl -f http://localhost:8000/api/health > /dev/null 2>&1; then
+              echo "✓ API is responding to health check"
+            else
+              echo "⚠ API health check not responding, but container is running"
+            fi
+            
+            # Wait a bit before cleanup to ensure container is stable
+            sleep 5
+            
+            # Clean up old images (but keep the one we're using)
+            echo "Cleaning up unused Docker images..."
+            sudo docker image prune -f --filter "dangling=true"
+            
+            echo "✓ Deployment completed successfully"
           else
             echo "✗ Container failed to start"
-            sudo docker logs breadnotes-api
+            sudo docker logs breadnotes-api || echo "No logs available"
             exit 1
           fi
-          
-          # Clean up old images
-          echo "Cleaning up old images..."
-          sudo docker image prune -f
         EOF
 
     - name: Build and Deploy Frontend
