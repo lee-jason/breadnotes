@@ -39,9 +39,6 @@ variable "project_name" {
   default     = "breadnotes"
 }
 
-
-
-
 variable "db_username" {
   description = "RDS username"
   type        = string

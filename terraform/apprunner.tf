@@ -100,10 +100,13 @@ resource "aws_apprunner_service" "api" {
           AWS_REGION = var.aws_region
           S3_BUCKET_NAME = aws_s3_bucket.images.bucket
           CLOUDFRONT_DOMAIN = aws_cloudfront_distribution.images.domain_name
+          DB_HOST = aws_db_instance.main.endpoint
+          DB_NAME = "breadnotes"
+          DB_USER = var.db_username
         }
 
         runtime_environment_secrets = {
-          DATABASE_URL = "postgres://${var.db_username}:${var.db_password}@${aws_db_instance.main.endpoint}/breadnotes"
+          DB_PASSWORD = aws_ssm_parameter.db_password.name
           GOOGLE_CLIENT_ID = aws_ssm_parameter.google_client_id.name
           GOOGLE_CLIENT_SECRET = aws_ssm_parameter.google_client_secret.name
           SECRET_KEY = aws_ssm_parameter.secret_key.name

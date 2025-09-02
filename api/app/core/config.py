@@ -5,7 +5,13 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str = "sqlite:///./breadnotes.db"
+    # Database component parts
+    db_host: str = "localhost"
+    db_name: str = "breadnotes"
+    db_user: str = "breadnotes"
+    db_password: str = "breadnotes_dev"
+    
+    # Other settings
     google_client_id: str = ""
     google_client_secret: str = ""
     secret_key: str = "dev-secret-key-change-in-production"
@@ -18,6 +24,11 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+
+    @property
+    def database_url(self) -> str:
+        """Construct database URL from components"""
+        return f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}/{self.db_name}"
 
 
 settings = Settings()

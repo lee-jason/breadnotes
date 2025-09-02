@@ -52,7 +52,10 @@ jobs:
       run: |
         echo "Running database migrations..."
         docker run --rm \
-          -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+          -e DB_HOST="${{ secrets.DB_HOST }}" \
+          -e DB_NAME="${{ secrets.DB_NAME }}" \
+          -e DB_USER="${{ secrets.DB_USER }}" \
+          -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
           $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
           uv run alembic upgrade head
 
