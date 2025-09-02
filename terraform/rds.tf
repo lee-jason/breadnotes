@@ -1,3 +1,19 @@
+# Generate random password for RDS
+resource "random_password" "db_password" {
+  length  = 32
+  special = true
+}
+
+# Store RDS password in Parameter Store
+resource "aws_ssm_parameter" "db_password" {
+  name        = "BREADNOTES_DB_PASSWORD"
+  type        = "SecureString"
+  value       = random_password.db_password.result
+  description = "Database password for BreadNotes RDS instance"
+  
+  tags = local.common_tags
+}
+
 # RDS Subnet Group using default VPC subnets
 resource "aws_db_subnet_group" "main" {
   name       = "${local.name_prefix}-db-subnet-group"
@@ -25,7 +41,7 @@ resource "aws_db_instance" "main" {
   # Database details
   db_name  = "breadnotes"
   username = var.db_username
-  password = var.db_password
+  password = random_password.db_password.result
 
   # Network
   vpc_security_group_ids = [aws_security_group.rds.id]

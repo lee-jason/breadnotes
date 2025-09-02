@@ -48,11 +48,7 @@ variable "db_username" {
   default     = "breadnotes"
 }
 
-variable "db_password" {
-  description = "RDS password"
-  type        = string
-  sensitive   = true
-}
+# RDS password now auto-generated and stored in Parameter Store
 
 # Sensitive variables moved to AWS Parameter Store
 # Create these parameters manually or via terraform:
