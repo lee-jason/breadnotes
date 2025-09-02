@@ -118,6 +118,10 @@ resource "aws_apprunner_service" "api" {
       image_repository_type = "ECR"
     }
 
+    authentication_configuration {
+      access_role_arn = aws_iam_role.apprunner_ecr_access.arn
+    }
+    
     auto_deployments_enabled  = true
   }
 
