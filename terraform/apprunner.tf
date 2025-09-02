@@ -44,7 +44,7 @@ resource "aws_iam_role" "apprunner_instance" {
   tags = local.common_tags
 }
 
-# Policy for App Runner instance to access S3 and other AWS services
+# Policy for App Runner instance to access S3 and SSM parameters
 resource "aws_iam_policy" "apprunner_instance" {
   name        = "${local.name_prefix}-apprunner-instance"
   description = "Policy for App Runner instance to access AWS services"
@@ -72,6 +72,16 @@ resource "aws_iam_policy" "apprunner_instance" {
         Resource = [
           aws_s3_bucket.images.arn,
           aws_s3_bucket.dev_images.arn
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters"
+        ]
+        Resource = [
+          "arn:aws:ssm:${var.aws_region}:*:parameter/BREADNOTES_*"
         ]
       }
     ]
