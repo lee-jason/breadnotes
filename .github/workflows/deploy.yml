@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Deploy to App Runner
 
 on:
   push:
@@ -13,100 +13,53 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Create environment file
-      run: |
-        cat > breadnotes.env << EOF
-        DATABASE_URL=${{ secrets.DATABASE_URL }}
-        GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-        GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-        SECRET_KEY=${{ secrets.SECRET_KEY }}
-        AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION=${{ secrets.AWS_REGION }}
-        S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
-        CLOUDFRONT_DOMAIN=${{ secrets.CLOUDFRONT_DOMAIN }}
-        FRONTEND_URL=${{ secrets.FRONTEND_URL }}
-        EOF
-    
-    - name: Debug environment file
-      run: |
-        ls -la breadnotes.env
-        echo "--- breadnotes.env contents ---"
-        cat breadnotes.env
-        echo "--- end breadnotes.env ---"
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Copy environment file to EC2
+    - name: Build production Docker image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: breadnotes-api
+        IMAGE_TAG: ${{ github.sha }}
       run: |
-        echo "Attempting to copy breadnotes.env file..."
-        scp -v -i ~/.ssh/id_rsa breadnotes.env ec2-user@${{ secrets.EC2_HOST }}:/tmp/breadnotes.env
-        echo "scp exit code: $?"
+        echo "Building production Docker image..."
+        docker build --target production -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./api
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-    - name: Build Docker image
+    - name: Push image to ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: breadnotes-api
+        IMAGE_TAG: ${{ github.sha }}
       run: |
-        echo "Building Docker image..."
-        docker build -t breadnotes-api ./api
+        echo "Pushing image to ECR..."
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-    - name: Save Docker image as tarball
+    - name: Run database migrations
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: breadnotes-api
+        IMAGE_TAG: ${{ github.sha }}
       run: |
-        echo "Saving Docker image..."
-        docker save breadnotes-api | gzip > breadnotes-api.tar.gz
-        ls -lh breadnotes-api.tar.gz
+        echo "Running database migrations..."
+        docker run --rm \
+          -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+          $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+          uv run alembic upgrade head
 
-    - name: Copy Docker image to EC2
+    - name: Deploy to App Runner
       run: |
-        echo "Transferring Docker image to EC2..."
-        scp -i ~/.ssh/id_rsa breadnotes-api.tar.gz ec2-user@${{ secrets.EC2_HOST }}:/tmp/breadnotes-api.tar.gz
-
-    - name: Verify files copied to EC2
-      run: |
-        ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
-          echo "Checking transferred files:"
-          ls -lh /tmp/breadnotes.env /tmp/breadnotes-api.tar.gz
-          echo "Docker image size: $(stat -c%s /tmp/breadnotes-api.tar.gz) bytes"
-        EOF
-
-    - name: Deploy to EC2
-      run: |
-        ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
-          # Create application directory
-          sudo mkdir -p /opt/breadnotes
-          
-          # Move and setup environment file
-          sudo cp /tmp/breadnotes.env /opt/breadnotes/.env
-          sudo chmod 600 /opt/breadnotes/.env
-          
-          # Load the new Docker image
-          echo "Loading new Docker image..."
-          sudo docker load < /tmp/breadnotes-api.tar.gz
-          
-          # Run database migrations with the new image
-          echo "Running database migrations..."
-          sudo docker run --rm --env-file /opt/breadnotes/.env breadnotes-api uv run alembic upgrade head || echo "Migration failed or no migrations needed"
-          
-          # Clean up old container thoroughly
-          echo "Cleaning up old containers..."
-          sudo docker stop breadnotes-api breadnotes-api-new 2>/dev/null || true
-          sleep 2
-          sudo docker rm breadnotes-api breadnotes-api-new 2>/dev/null || true
-
-          # Start new container (using -new suffix to avoid Docker metadata issues)
-          echo "Starting new container..."
-          sudo docker run -d --name breadnotes-api --env-file /opt/breadnotes/.env -p 8000:8000 breadnotes-api
-          
-          # Wait longer for container to fully start
-          sleep 10
-          
-          # Clean up old images (but keep the one we're using)
-          echo "Cleaning up unused Docker images..."
-          sudo docker image prune -f --filter "dangling=true"
-        EOF
+        echo "Triggering App Runner deployment..."
+        aws apprunner start-deployment --service-arn ${{ secrets.APP_RUNNER_SERVICE_ARN }}
 
     - name: Build and Deploy Frontend
       run: |

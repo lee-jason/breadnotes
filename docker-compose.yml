@@ -23,6 +23,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
+      target: development
     container_name: breadnotes_api
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-breadnotes}:${POSTGRES_PASSWORD:-breadnotes_dev}@db:5432/${POSTGRES_DB:-breadnotes}

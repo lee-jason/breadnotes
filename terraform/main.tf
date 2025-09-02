@@ -41,10 +41,6 @@ variable "project_name" {
 
 
 
-variable "ec2_public_key" {
-  description = "Public key for EC2 SSH access"
-  type        = string
-}
 
 variable "db_username" {
   description = "RDS username"
@@ -58,22 +54,14 @@ variable "db_password" {
   sensitive   = true
 }
 
-variable "google_client_id" {
-  description = "Google OAuth client ID"
-  type        = string
-}
-
-variable "google_client_secret" {
-  description = "Google OAuth client secret"
-  type        = string
-  sensitive   = true
-}
-
-variable "secret_key" {
-  description = "Application secret key"
-  type        = string
-  sensitive   = true
-}
+# Sensitive variables moved to AWS Parameter Store
+# Create these parameters manually or via terraform:
+# - BREADNOTES_GOOGLE_CLIENT_ID
+# - BREADNOTES_GOOGLE_CLIENT_SECRET  
+# - BREADNOTES_SECRET_KEY
+# - BREADNOTES_AWS_ACCESS_KEY_ID
+# - BREADNOTES_AWS_SECRET_ACCESS_KEY
+# - BREADNOTES_FRONTEND_URL
 
 # Local values
 locals {

@@ -12,3 +12,10 @@ google_client_secret = "your-google-client-secret"
 
 # Application
 secret_key = "your-secret-key-for-sessions"
+
+# aws
+aws_access_key_id = ""
+aws_secret_access_key = ""
+
+# app
+frontend_url = "https://breadnotes.jasonjl.me"
