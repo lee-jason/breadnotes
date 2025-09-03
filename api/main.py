@@ -40,18 +40,6 @@ async def root():
     return {"message": "Welcome to BreadNotes API"}
 
 
-@app.get("/debug/env")
-async def debug_env():
-    """Debug endpoint to check environment variables (remove after debugging)"""
-    return {
-        "environment": settings.environment,
-        "db_host": settings.db_host,
-        "google_client_id_set": settings.google_client_id,
-        "google_client_secret_set": settings.google_client_secret[10:],
-        "frontend_url": settings.frontend_url,
-    }
-
-
 handler = Mangum(app)
 
 if __name__ == "__main__":
