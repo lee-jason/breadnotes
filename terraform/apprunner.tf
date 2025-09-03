@@ -156,6 +156,15 @@ resource "aws_apprunner_service" "api" {
 
   auto_scaling_configuration_arn = aws_apprunner_auto_scaling_configuration_version.minor.arn
 
+  health_check_configuration {
+    healthy_threshold   = 1
+    interval            = 20 
+    path                = "/api/health"
+    protocol            = "HTTP"
+    timeout             = 5
+    unhealthy_threshold = 5
+  }
+
   tags = local.common_tags
 }
 
