@@ -26,6 +26,7 @@ services:
       target: development
     container_name: breadnotes_api
     environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
       - DB_HOST=db
       - DB_NAME=${DB_NAME:-breadnotes}
       - DB_USER=${DB_USER:-breadnotes}

@@ -107,6 +107,7 @@ resource "aws_apprunner_service" "api" {
         port = "8000"
         
         runtime_environment_variables = {
+          ENVIRONMENT = "production"
           AWS_REGION = var.aws_region
           S3_BUCKET_NAME = aws_s3_bucket.images.bucket
           CLOUDFRONT_DOMAIN = aws_cloudfront_distribution.images.domain_name

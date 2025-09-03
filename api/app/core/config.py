@@ -10,8 +10,9 @@ class Settings(BaseSettings):
     db_name: str = "breadnotes"
     db_user: str = "breadnotes"
     db_password: str = "breadnotes_dev"
-    
+
     # Other settings
+    environment: str = "development"
     google_client_id: str = ""
     google_client_secret: str = ""
     secret_key: str = "dev-secret-key-change-in-production"
