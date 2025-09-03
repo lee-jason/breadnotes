@@ -1,6 +1,10 @@
 # Generate random password for RDS
 resource "random_password" "db_password" {
-  length  = 32
+  length   = 32
+  special  = false
+  upper    = true
+  lower    = true
+  numeric  = true
 }
 
 # Store RDS password in Parameter Store
