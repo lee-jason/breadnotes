@@ -13,9 +13,9 @@ def setup_logging():
     # Configure root logger
     root_logger = logging.getLogger()
     
-    # Set level based on environment
+    # Set level based on environment - minimize production logging for cost
     if settings.environment == "production":
-        root_logger.setLevel(logging.INFO)
+        root_logger.setLevel(logging.WARNING)  # Only warnings and errors
     else:
         root_logger.setLevel(logging.DEBUG)
     

@@ -15,13 +15,13 @@ async def login(request: Request):
     if not settings.google_client_id or not settings.google_client_secret:
         raise HTTPException(status_code=503, detail="OAuth not configured")
 
-    redirect_uri = request.url_for("auth_callback")
-    logger.info(f"Initial redirect URI: {redirect_uri}")
+    # Use environment-specific redirect URI
     if settings.environment == "production":
-        redirect_uri = redirect_uri.replace("http://", "https://")
-        logger.info(f"Production redirect URI: {redirect_uri}")
         redirect_uri = "https://api.breadnotes.jasonjl.me/api/auth/callback"
-        logger.info(f"Overridden redirect URI: {redirect_uri}")
+    else:
+        redirect_uri = "http://localhost:8000/api/auth/callback"
+
+    logger.info(f"Using redirect URI: {redirect_uri}")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
