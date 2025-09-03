@@ -1,33 +1,8 @@
-# Generate random password for RDS
-resource "random_password" "db_password" {
-  length   = 32
-  special  = false
-  upper    = true
-  lower    = true
-  numeric  = true
-}
 
-# Store RDS password in Parameter Store
-resource "aws_ssm_parameter" "db_password" {
-  name        = "BREADNOTES_DB_PASSWORD"
-  type        = "SecureString"
-  value       = random_password.db_password.result
-  description = "Database password for BreadNotes RDS instance"
-  
-  tags = local.common_tags
-}
 
-# RDS Subnet Group using default VPC subnets
-resource "aws_db_subnet_group" "main" {
-  name       = "${local.name_prefix}-db-subnet-group"
-  subnet_ids = data.aws_subnets.default.ids
-
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-db-subnet-group"
-  })
-}
-
-# RDS PostgreSQL Instance
+# RDS PostgreSQL Instance - COMMENTED OUT FOR AURORA MIGRATION
+# Uncomment if you need to rollback from Aurora to RDS
+/*
 resource "aws_db_instance" "main" {
   identifier = "${local.name_prefix}-postgres"
 
@@ -64,3 +39,4 @@ resource "aws_db_instance" "main" {
     Name = "${local.name_prefix}-postgres"
   })
 }
+*/

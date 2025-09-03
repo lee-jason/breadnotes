@@ -72,6 +72,17 @@ jobs:
         fi
         
         echo "Found App Runner service: $SERVICE_ARN"
+        
+        # Check if service is in RUNNING state before deployment
+        STATUS=$(aws apprunner describe-service --service-arn "$SERVICE_ARN" --query "Service.Status" --output text)
+        echo "Current service status: $STATUS"
+        
+        if [ "$STATUS" != "RUNNING" ]; then
+          echo "Service is not in RUNNING state. Current state: $STATUS"
+          echo "Waiting for service to be ready..."
+          exit 1
+        fi
+        
         echo "Triggering App Runner deployment..."
         aws apprunner start-deployment --service-arn "$SERVICE_ARN"
 

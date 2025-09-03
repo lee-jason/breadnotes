@@ -110,7 +110,7 @@ resource "aws_apprunner_service" "api" {
           AWS_REGION = var.aws_region
           S3_BUCKET_NAME = aws_s3_bucket.images.bucket
           CLOUDFRONT_DOMAIN = aws_cloudfront_distribution.images.domain_name
-          DB_HOST = aws_db_instance.main.endpoint
+          DB_HOST = aws_rds_cluster.aurora.endpoint
           DB_NAME = "breadnotes"
           DB_USER = var.db_username
         }
@@ -132,7 +132,7 @@ resource "aws_apprunner_service" "api" {
       access_role_arn = aws_iam_role.apprunner_ecr_access.arn
     }
     
-    auto_deployments_enabled  = true
+    auto_deployments_enabled  = false
   }
 
   instance_configuration {

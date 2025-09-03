@@ -10,10 +10,10 @@ output "images_cloudfront_url" {
   value       = "https://${aws_cloudfront_distribution.images.domain_name}"
 }
 
-# RDS Endpoint
-output "rds_endpoint" {
-  description = "RDS instance endpoint"
-  value       = aws_db_instance.main.endpoint
+# Aurora Endpoint
+output "aurora_endpoint" {
+  description = "Aurora instance endpoint"
+  value       = aws_rds_cluster.aurora.endpoint
   sensitive   = true
 }
 
