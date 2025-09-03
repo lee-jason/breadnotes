@@ -96,6 +96,18 @@ resource "aws_iam_role_policy_attachment" "apprunner_instance" {
   policy_arn = aws_iam_policy.apprunner_instance.arn
 }
 
+# Minimal Auto Scaling Configuration for cost control
+resource "aws_apprunner_auto_scaling_configuration_version" "minor" {
+  auto_scaling_configuration_name = "${local.name_prefix}-minor-scaling"
+  
+  # Minimize instances for cost control
+  max_concurrency = 25    # Requests per instance (default: 100)
+  max_size        = 1    # Maximum number of instances (default: 25)
+  min_size        = 1    # Minimum number of instances (can scale to zero!)
+
+  tags = local.common_tags
+}
+
 # App Runner Service
 resource "aws_apprunner_service" "api" {
   service_name = "${local.name_prefix}-api"
@@ -142,14 +154,7 @@ resource "aws_apprunner_service" "api" {
     instance_role_arn = aws_iam_role.apprunner_instance.arn
   }
 
-  health_check_configuration {
-    healthy_threshold   = 1
-    interval            = 10
-    path                = "/api/health"
-    protocol            = "HTTP"
-    timeout             = 5
-    unhealthy_threshold = 5
-  }
+  auto_scaling_configuration_arn = aws_apprunner_auto_scaling_configuration_version.minor.arn
 
   tags = local.common_tags
 }

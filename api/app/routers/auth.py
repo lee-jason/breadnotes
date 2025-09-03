@@ -1,3 +1,4 @@
+from app.core.logging import logger
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
@@ -15,8 +16,12 @@ async def login(request: Request):
         raise HTTPException(status_code=503, detail="OAuth not configured")
 
     redirect_uri = request.url_for("auth_callback")
+    logger.info(f"Initial redirect URI: {redirect_uri}")
     if settings.environment == "production":
         redirect_uri = redirect_uri.replace("http://", "https://")
+        logger.info(f"Production redirect URI: {redirect_uri}")
+        redirect_uri = "https://api.breadnotes.jasonjl.me/api/auth/callback"
+        logger.info(f"Overridden redirect URI: {redirect_uri}")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 

@@ -2,8 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from mangum import Mangum
+import logging
 
 from app.core.config import settings
+from app.core.logging import logger
 from app.routers import auth, bread_entries
 
 app = FastAPI(
@@ -27,10 +29,13 @@ app.include_router(bread_entries.router, prefix="/api")
 
 @app.get("/api/health")
 async def health_check():
+    logger.info("Health check endpoint called")
     return {"status": "healthy", "message": "BreadNotes API is running"}
 
 @app.get("/")
 async def root():
+    logger.info(f"Root endpoint called - Environment: {settings.environment}")
+    logger.info(f"Database host: {settings.db_host}")
     return {"message": "Welcome to BreadNotes API"}
 
 handler = Mangum(app)
