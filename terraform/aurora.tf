@@ -48,6 +48,7 @@ resource "aws_rds_cluster" "aurora" {
   serverlessv2_scaling_configuration {
     max_capacity = 1.0    # 1 ACU max (very small)
     min_capacity = 0.5    # 0.5 ACU min (smallest possible)
+    seconds_until_auto_pause = 300  # Auto-pause after 5 minutes of inactivity
   }
   
   # Security
@@ -56,6 +57,7 @@ resource "aws_rds_cluster" "aurora" {
   # Cost optimization
   deletion_protection = true  # Set to true for production
   skip_final_snapshot = false  # Set to false for production
+  final_snapshot_identifier = "${local.name_prefix}-aurora-final-snapshot"
 
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-aurora-cluster"
@@ -75,6 +77,6 @@ resource "aws_rds_cluster_instance" "aurora" {
   monitoring_interval = 0  # Disable enhanced monitoring to save cost
 
   publicly_accessible = true
-  
+
   tags = local.common_tags
 }
