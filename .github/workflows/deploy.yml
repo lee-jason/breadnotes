@@ -44,43 +44,43 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-    - name: Setup database user and schema
-      run: |
-        echo "Setting up breadnotes user and database in Supabase..."
+    # - name: Setup database user and schema
+    #   run: |
+    #     echo "Setting up breadnotes user and database in Supabase..."
         
-        # First, create the breadnotes user if it doesn't exist
-        docker run --rm postgres:15 psql \
-          "postgresql://postgres.zmwhbssepcywbiahpisi:${{ secrets.DB_PASSWORD }}@aws-1-us-east-1.pooler.supabase.com:5432/postgres" \
-          -c "
-          -- Create breadnotes user if it doesn't exist
-          DO \$\$ BEGIN
-            IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'breadnotes') THEN
-              CREATE USER breadnotes WITH PASSWORD '${{ secrets.DB_PASSWORD }}';
-              RAISE NOTICE 'Created user breadnotes';
-            ELSE
-              RAISE NOTICE 'User breadnotes already exists';
-            END IF;
-          END \$\$;
-          "
+    #     # First, create the breadnotes user if it doesn't exist
+    #     docker run --rm postgres:15 psql \
+    #       "postgresql://postgres.zmwhbssepcywbiahpisi:${{ secrets.DB_PASSWORD }}@aws-1-us-east-1.pooler.supabase.com:5432/postgres" \
+    #       -c "
+    #       -- Create breadnotes user if it doesn't exist
+    #       DO \$\$ BEGIN
+    #         IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'breadnotes') THEN
+    #           CREATE USER breadnotes WITH PASSWORD '${{ secrets.DB_PASSWORD }}';
+    #           RAISE NOTICE 'Created user breadnotes';
+    #         ELSE
+    #           RAISE NOTICE 'User breadnotes already exists';
+    #         END IF;
+    #       END \$\$;
+    #       "
 
-        # Create the breadnotes database if it doesn't exist (separate command since CREATE DATABASE can't be in DO block)
-        docker run --rm postgres:15 psql \
-          "postgresql://postgres.zmwhbssepcywbiahpisi:${{ secrets.DB_PASSWORD }}@aws-1-us-east-1.pooler.supabase.com:5432/postgres" \
-          -c "CREATE DATABASE breadnotes OWNER breadnotes" 2>/dev/null || echo "Database breadnotes may already exist"
+    #     # Create the breadnotes database if it doesn't exist (separate command since CREATE DATABASE can't be in DO block)
+    #     docker run --rm postgres:15 psql \
+    #       "postgresql://postgres.zmwhbssepcywbiahpisi:${{ secrets.DB_PASSWORD }}@aws-1-us-east-1.pooler.supabase.com:5432/postgres" \
+    #       -c "CREATE DATABASE breadnotes OWNER breadnotes" 2>/dev/null || echo "Database breadnotes may already exist"
 
-        # Set up permissions on the breadnotes database
-        docker run --rm postgres:15 psql \
-          "postgresql://postgres.zmwhbssepcywbiahpisi:${{ secrets.DB_PASSWORD }}@aws-1-us-east-1.pooler.supabase.com:5432/postgres" \
-          -c "
-          -- Grant database-level permissions
-          GRANT ALL PRIVILEGES ON DATABASE breadnotes TO breadnotes;
-          -- Grant schema permissions
-          GRANT ALL ON SCHEMA public TO breadnotes;
-          GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO breadnotes;
-          GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO breadnotes;
-          ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO breadnotes;
-          ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO breadnotes;
-          " 2>/dev/null || echo "Permissions may already be set or database doesn't exist yet"
+    #     # Set up permissions on the breadnotes database
+    #     docker run --rm postgres:15 psql \
+    #       "postgresql://postgres.zmwhbssepcywbiahpisi:${{ secrets.DB_PASSWORD }}@aws-1-us-east-1.pooler.supabase.com:5432/postgres" \
+    #       -c "
+    #       -- Grant database-level permissions
+    #       GRANT ALL PRIVILEGES ON DATABASE breadnotes TO breadnotes;
+    #       -- Grant schema permissions
+    #       GRANT ALL ON SCHEMA public TO breadnotes;
+    #       GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO breadnotes;
+    #       GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO breadnotes;
+    #       ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO breadnotes;
+    #       ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO breadnotes;
+    #       " 2>/dev/null || echo "Permissions may already be set or database doesn't exist yet"
 
     - name: Run database migrations
       env:
