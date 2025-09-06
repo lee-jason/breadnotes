@@ -70,7 +70,7 @@ jobs:
 
         # Set up permissions on the breadnotes database
         docker run --rm postgres:15 psql \
-          "postgresql://postgres.zmwhbssepcywbiahpisi:${{ secrets.DB_PASSWORD }}@aws-1-us-east-1.pooler.supabase.com:5432/breadnotes" \
+          "postgresql://postgres.zmwhbssepcywbiahpisi:${{ secrets.DB_PASSWORD }}@aws-1-us-east-1.pooler.supabase.com:5432/postgres" \
           -c "
           -- Grant database-level permissions
           GRANT ALL PRIVILEGES ON DATABASE breadnotes TO breadnotes;
