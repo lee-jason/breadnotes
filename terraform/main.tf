@@ -5,6 +5,14 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    supabase = {
+      source  = "supabase/supabase"
+      version = "~> 1.0"
+    }
+    postgresql = {
+      source  = "cyrilgdn/postgresql"
+      version = "~> 1.21"
+    }
   }
 
     
@@ -18,6 +26,20 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
+}
+
+# Supabase provider configuration
+provider "supabase" {
+  access_token = var.SUPABASE_ACCESS_TOKEN
+}
+
+# PostgreSQL provider for managing database objects
+provider "postgresql" {
+  host     = supabase_project.breadnotes.database_host
+  port     = 5432
+  database = "breadnotes"
+  username = "breadnotes"
+  password = random_password.supabase_db_password.result
 }
 
 # Provider for us-east-1 (required for ACM certificates used with CloudFront)
@@ -43,6 +65,17 @@ variable "db_username" {
   description = "RDS username"
   type        = string
   default     = "breadnotes"
+}
+
+variable "SUPABASE_ACCESS_TOKEN" {
+  description = "Supabase access token"
+  type        = string
+  sensitive   = true
+}
+
+variable "SUPABASE_ORG_ID" {
+  description = "Supabase organization ID"
+  type        = string
 }
 
 # RDS password now auto-generated and stored in Parameter Store
