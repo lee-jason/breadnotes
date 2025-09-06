@@ -48,7 +48,7 @@ jobs:
       run: |
         echo "Setting up breadnotes user and database in Supabase..."
         docker run --rm postgres:15 psql \
-          "postgresql://postgres:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:5432/postgres" \
+          "postgresql://postgres.zmwhbssepcywbiahpisi:${{ secrets.DB_PASSWORD }}@aws-1-us-east-1.pooler.supabase.com:5432/postgres" \
           -c "
           -- Create breadnotes user if it doesn't exist
           DO \$\$ BEGIN
@@ -70,13 +70,13 @@ jobs:
 
         # Also create the database using a separate connection since CREATE DATABASE can't be in a transaction
         docker run --rm postgres:15 psql \
-          "postgresql://postgres:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:5432/postgres" \
+          "postgresql://postgres.zmwhbssepcywbiahpisi:${{ secrets.DB_PASSWORD }}@aws-1-us-east-1.pooler.supabase.com:5432/postgres" \
           -c "SELECT 1" \
           -c "CREATE DATABASE breadnotes OWNER breadnotes" 2>/dev/null || echo "Database breadnotes may already exist"
 
         # Set up permissions on the breadnotes database
         docker run --rm postgres:15 psql \
-          "postgresql://postgres:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:5432/breadnotes" \
+          "postgresql://postgres.zmwhbssepcywbiahpisi:${{ secrets.DB_PASSWORD }}@aws-1-us-east-1.pooler.supabase.com:5432/breadnotes" \
           -c "
           -- Grant schema permissions
           GRANT ALL ON SCHEMA public TO breadnotes;

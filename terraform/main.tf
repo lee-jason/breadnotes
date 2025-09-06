@@ -9,10 +9,6 @@ terraform {
       source  = "supabase/supabase"
       version = "~> 1.0"
     }
-    postgresql = {
-      source  = "cyrilgdn/postgresql"
-      version = "~> 1.21"
-    }
   }
 
     
@@ -31,15 +27,6 @@ provider "aws" {
 # Supabase provider configuration
 provider "supabase" {
   access_token = var.SUPABASE_ACCESS_TOKEN
-}
-
-# PostgreSQL provider for managing database objects
-provider "postgresql" {
-  host     = supabase_project.breadnotes.database_host
-  port     = 5432
-  database = "breadnotes"
-  username = "breadnotes"
-  password = random_password.supabase_db_password.result
 }
 
 # Provider for us-east-1 (required for ACM certificates used with CloudFront)
