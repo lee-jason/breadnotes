@@ -24,7 +24,9 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:3000"
 
     class Config:
-        env_file = ".env"
+        # Only use .env file in development, system env vars take precedence
+        env_file = ".env" if os.getenv("ENVIRONMENT", "development") == "development" else None
+        case_sensitive = False
 
     @property
     def database_url(self) -> str:
