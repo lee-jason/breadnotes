@@ -95,9 +95,9 @@ jobs:
         echo "Debug: DB_PASSWORD = [HIDDEN]"
         echo "Debug: DB_URL = postgresql://${{ secrets.DB_USER }}:PASSWORD@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}"
 
-        docker run --rm -e DB_HOST="${{ secrets.DB_HOST }}" -e DB_NAME="${{ secrets.DB_NAME }}" -e DB_USER="${{ secrets.DB_USER }}" -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG python -c "from app.core.config import settings; print(f'DB_HOST: {settings.db_host}')"
+        docker run --rm -e DB_HOST="${{ secrets.DB_HOST }}" -e DB_NAME="${{ secrets.DB_NAME }}" -e DB_USER="${{ secrets.DB_USER }}" -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG uv run python -c "from app.core.config import settings; print(f'DB_HOST: {settings.db_host}')"
         
-        docker run --rm -e DB_HOST="${{ secrets.DB_HOST }}" -e DB_NAME="${{ secrets.DB_NAME }}" -e DB_USER="${{ secrets.DB_USER }}" -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG python -c "from app.core.config import settings; print(f'DB_URL: {settings.database_url.replace(settings.db_password, \"***\")}')"
+        docker run --rm -e DB_HOST="${{ secrets.DB_HOST }}" -e DB_NAME="${{ secrets.DB_NAME }}" -e DB_USER="${{ secrets.DB_USER }}" -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG uv run python -c "from app.core.config import settings; print(f'DB_URL: {settings.database_url.replace(settings.db_password, \"***\")}')"
 
         # Test the connection string construction
         echo "Running database migrations..."
