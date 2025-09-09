@@ -33,6 +33,10 @@ resource "aws_ssm_parameter" "db_host" {
   description = "DB Host"
   
   tags = local.common_tags
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
 
 # Store Supabase project details in Parameter Store
@@ -43,6 +47,10 @@ resource "aws_ssm_parameter" "db_user" {
   description = "DB User"
 
   tags = local.common_tags
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
 
 # Store Supabase project details in Parameter Store
@@ -53,4 +61,8 @@ resource "aws_ssm_parameter" "db_name" {
   description = "DB Name"
 
   tags = local.common_tags
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
