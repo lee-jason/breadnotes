@@ -123,12 +123,12 @@ resource "aws_apprunner_service" "api" {
           AWS_REGION = var.aws_region
           S3_BUCKET_NAME = aws_s3_bucket.images.bucket
           CLOUDFRONT_DOMAIN = aws_cloudfront_distribution.images.domain_name
-          DB_HOST = aws_ssm_parameter.db_host.name
-          DB_NAME = aws_ssm_parameter.db_name.name
-          DB_USER = aws_ssm_parameter.db_user.name
         }
 
         runtime_environment_secrets = {
+          DB_HOST = aws_ssm_parameter.db_host.name
+          DB_NAME = aws_ssm_parameter.db_name.name
+          DB_USER = aws_ssm_parameter.db_user.name
           DB_PASSWORD = aws_ssm_parameter.db_password.name
           GOOGLE_CLIENT_ID = aws_ssm_parameter.google_client_id.name
           GOOGLE_CLIENT_SECRET = aws_ssm_parameter.google_client_secret.name
