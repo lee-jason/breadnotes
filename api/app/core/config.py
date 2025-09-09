@@ -25,8 +25,9 @@ class Settings(BaseSettings):
 
     class Config:
         # Only use .env file in development, system env vars take precedence
-        env_file = ".env" if os.getenv("ENVIRONMENT", "development") == "development" else None
-        case_sensitive = False
+        env_file = (
+            ".env" if os.getenv("ENVIRONMENT", "development") == "development" else None
+        )
 
     @property
     def database_url(self) -> str:

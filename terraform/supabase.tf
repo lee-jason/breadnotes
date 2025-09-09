@@ -26,54 +26,31 @@ resource "supabase_project" "breadnotes" {
 }
 
 # Store Supabase project details in Parameter Store
-resource "aws_ssm_parameter" "supabase_url" {
+resource "aws_ssm_parameter" "db_host" {
   name        = "BREADNOTES_DB_HOST"
   type        = "SecureString"
   value       = "PLACEHOLDER"
-  description = "Supabase database URL for BreadNotes"
+  description = "DB Host"
   
   tags = local.common_tags
 }
 
-# resource "aws_ssm_parameter" "supabase_anon_key" {
-#   name        = "BREADNOTES_SUPABASE_ANON_KEY"
-#   type        = "SecureString"
-#   value       = supabase_project.breadnotes.anon_key
-#   description = "Supabase anonymous key for BreadNotes"
-  
-#   tags = local.common_tags
-# }
+# Store Supabase project details in Parameter Store
+resource "aws_ssm_parameter" "db_user" {
+  name        = "BREADNOTES_DB_USER"
+  type        = "SecureString"
+  value       = "PLACEHOLDER"
+  description = "DB User"
 
-# resource "aws_ssm_parameter" "supabase_service_role_key" {
-#   name        = "BREADNOTES_SUPABASE_SERVICE_ROLE_KEY"
-#   type        = "SecureString"
-#   value       = supabase_project.breadnotes.service_role_key
-#   description = "Supabase service role key for BreadNotes"
-  
-#   tags = local.common_tags
-# }
+  tags = local.common_tags
+}
 
-# # Configure project settings (optional)
-# resource "supabase_settings" "breadnotes" {
-#   project_ref = supabase_project.breadnotes.id
-  
-#   api = {
-#     db_schema            = "public"
-#     db_extra_search_path = "public"
-#     max_rows             = 1000
-#   }
-  
-#   auth = {
-#     enable_signup         = true
-#     enable_confirmations  = true
-#     enable_phone_auth     = false
-#     enable_phone_confirmations = false
-#   }
-# }
+# Store Supabase project details in Parameter Store
+resource "aws_ssm_parameter" "db_name" {
+  name        = "BREADNOTES_DB_NAME"
+  type        = "SecureString"
+  value       = "PLACEHOLDER"
+  description = "DB Name"
 
-# Outputs for reference
-output "supabase_project_id" {
-  description = "Supabase project ID"
-  value       = supabase_project.breadnotes.id
-  sensitive   = false
+  tags = local.common_tags
 }
