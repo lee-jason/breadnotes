@@ -1,12 +1,15 @@
 import logging
 
-from app.core.config import settings
-from app.core.logging import logger
-from app.routers import auth, bread_entries
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
 from starlette.middleware.sessions import SessionMiddleware
+
+from app.core.config import settings
+from app.core.database import get_db
+from app.core.logging import logger
+from app.models.bread_entry import BreadEntry
+from app.routers import auth, bread_entries
 
 app = FastAPI(
     title="BreadNotes API",
@@ -30,7 +33,17 @@ app.include_router(bread_entries.router, prefix="/api")
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "healthy", "message": "BreadNotes API is running"}
+    try:
+        db = next(get_db())
+        # Simple query to keep database connection active
+        db.execute("SELECT 1").scalar()
+        db.close()
+        database_status = "connected"
+    except Exception as e:
+        logger.warning(f"Database ping failed: {str(e)}")
+        database_status = "disconnected"
+
+    return {"status": "healthy", "message": "BreadNotes API is running", "database": database_status}
 
 
 @app.get("/")
